@@ -8,6 +8,7 @@ use Illuminate\Redis\Connections\PhpRedisConnection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\InteractsWithTime;
 
+use Illuminate\Support\Str;
 use function Illuminate\Support\enum_value;
 
 class RateLimiter
@@ -256,6 +257,12 @@ class RateLimiter
      */
     public function clear($key)
     {
+        $limiters = array_map(fn($limiter) => $limiter.':', array_keys($this->limiters));
+
+        if (Str::startsWith($key, $limiters)) {
+            $key = md5(Str::replaceFirst(':', '', $key));
+        }
+
         $key = $this->cleanRateLimiterKey($key);
 
         $this->resetAttempts($key);
